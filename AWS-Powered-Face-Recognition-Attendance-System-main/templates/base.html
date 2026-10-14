@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Recogny AI{% endblock %}</title>
+    <!-- Font Awesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="{% if not session.get('logged_in') %}login-body{% endif %}">
+
+    {% if session.get('logged_in') %}
+        <div id="wrapper">
+            <!-- Sidebar -->
+            <nav id="sidebar">
+                <div class="sidebar-header">
+                    <i class="fa-solid fa-face-viewfinder" style="font-size: 24px; color: #818cf8;"></i>
+                    <span class="logo-text">Recogny AI</span>
+                </div>
+                
+                <ul style="display: flex; flex-direction: column; height: calc(100% - 75px);">
+                    {% if session.get('role') == 'admin' %}
+                        <li class="{% if request.path == '/dashboard' %}active{% endif %}">
+                            <a href="/dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+                        </li>
+                        <li class="{% if request.path == '/attendance' %}active{% endif %}">
+                            <a href="/attendance"><i class="fa-solid fa-camera"></i> Webcam Scanner</a>
+                        </li>
+                        <li class="{% if request.path == '/students' %}active{% endif %}">
+                            <a href="/students"><i class="fa-solid fa-user-graduate"></i> Students</a>
+                        </li>
+                        <li class="{% if request.path == '/reports' %}active{% endif %}">
+                            <a href="/reports"><i class="fa-solid fa-file-invoice"></i> Reports</a>
+                        </li>
+                        <li class="{% if request.path == '/settings' %}active{% endif %}">
+                            <a href="/settings"><i class="fa-solid fa-sliders"></i> Settings</a>
+                        </li>
+                    {% else %}
+                        <li class="active">
+                            <a href="/student/portal"><i class="fa-solid fa-user-shield"></i> Student Portal</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li style="margin-top: auto; list-style: none;">
+                        <a href="/logout" style="color: #f87171;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Content Pane -->
+            <div id="content" class="fade-in">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    {% else %}
+        <!-- Centered Login Layout -->
+        {% block login_content %}{% endblock %}
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

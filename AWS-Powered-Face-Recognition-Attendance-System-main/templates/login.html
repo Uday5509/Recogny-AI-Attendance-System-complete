@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}
+Login | Recogny AI
+{% endblock %}
+
+{% block login_content %}
+
+<div class="login-container">
+
+    <div class="login-box">
+
+        <h1>Recogny AI</h1>
+
+        <h3>AI Powered Attendance System</h3>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-align: center;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Login Tabs -->
+        <div style="display: flex; margin-bottom: 25px; border-bottom: 1px solid #374151;">
+            <div id="tab-admin" onclick="switchTab('admin')" style="flex: 1; padding: 10px; color: #3b82f6; border-bottom: 2px solid #3b82f6; cursor: pointer; font-weight: bold; font-size: 14px;">Teacher Login</div>
+            <div id="tab-student" onclick="switchTab('student')" style="flex: 1; padding: 10px; color: #9ca3af; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 14px;">Student Login</div>
+        </div>
+
+        <!-- Teacher Login Form -->
+        <form id="form-admin" action="/login" method="POST" style="display: block;">
+            <input type="hidden" name="role" value="admin">
+            <input
+                type="text"
+                name="username"
+                placeholder="Teacher Username"
+                required
+            >
+            <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+            >
+            <button type="submit">
+                Login as Teacher
+            </button>
+        </form>
+
+        <!-- Student Login Form -->
+        <form id="form-student" action="/login" method="POST" style="display: none;">
+            <input type="hidden" name="role" value="student">
+            <input
+                type="text"
+                name="roll"
+                placeholder="Enter Roll Number"
+                required
+            >
+            <button type="submit" style="background: #10b981;">
+                Login as Student
+            </button>
+        </form>
+
+        <script>
+            function switchTab(role) {
+                const tabAdmin = document.getElementById('tab-admin');
+                const tabStudent = document.getElementById('tab-student');
+                const formAdmin = document.getElementById('form-admin');
+                const formStudent = document.getElementById('form-student');
+
+                if (role === 'admin') {
+                    tabAdmin.style.color = '#3b82f6';
+                    tabAdmin.style.borderBottomColor = '#3b82f6';
+                    tabStudent.style.color = '#9ca3af';
+                    tabStudent.style.borderBottomColor = 'transparent';
+                    formAdmin.style.display = 'block';
+                    formStudent.style.display = 'none';
+                } else {
+                    tabStudent.style.color = '#10b981';
+                    tabStudent.style.borderBottomColor = '#10b981';
+                    tabAdmin.style.color = '#9ca3af';
+                    tabAdmin.style.borderBottomColor = 'transparent';
+                    formAdmin.style.display = 'none';
+                    formStudent.style.display = 'block';
+                }
+            }
+        </script>
+
+    </div>
+
+</div>
+
+{% endblock %}

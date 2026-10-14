@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Webcam Scanner | Recogny AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 40px auto; color: white; padding: 20px; font-family: sans-serif;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <a href="/dashboard" style="color: #60a5fa; text-decoration: none; font-size: 15px; float: left; margin-top: 10px;"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        <h1 style="display: inline-block;">Face Recognition Attendance Scanner</h1>
+        <p style="color: #9ca3af; margin-top: 5px;">Position your face in front of the camera for automatic attendance marking</p>
+    </div>
+
+    <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center;">
+        <!-- Camera Section -->
+        <div style="background: #111827; padding: 25px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3); width: 100%; max-width: 530px; text-align: center;">
+            <div style="position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 20px; border: 2px solid #374151;">
+                <video id="webcam-video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                
+                <!-- Scanning animation overlay -->
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 3px solid rgba(59, 130, 246, 0.3); box-sizing: border-box; pointer-events: none;">
+                    <!-- Laser line -->
+                    <div id="laser" style="position: absolute; width: 100%; height: 3px; background: linear-gradient(to right, transparent, #3b82f6, transparent); animation: scanEffect 2.5s linear infinite;"></div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="btn-camera" style="background: #ef4444; width: auto; padding: 10px 25px;">Stop Camera</button>
+                <button id="btn-manual-scan" style="background: #10b981; width: auto; padding: 10px 25px;">Scan Now</button>
+            </div>
+            <div style="margin-top: 15px;">
+                <label style="font-size: 14px; color: #9ca3af; cursor: pointer;">
+                    <input type="checkbox" id="chk-auto" checked style="width: auto; margin-right: 8px;"> Enable Auto-Scan (Every 3 seconds)
+                </label>
+            </div>
+        </div>
+
+        <!-- Scanning Status Section -->
+        <div style="background: #111827; padding: 25px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3); width: 100%; max-width: 380px; min-height: 400px; display: flex; flex-column: column; justify-content: center; align-items: center; text-align: center;" id="status-card">
+            
+            <!-- Idle / Searching View -->
+            <div id="view-searching" style="display: block;">
+                <div style="border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                <h3>Active & Scanning...</h3>
+                <p style="color: #9ca3af; margin-top: 10px; font-size: 14px;">Place your face in the box. The system will automatically compare your features with registered profiles.</p>
+            </div>
+
+            <!-- Success Outcome Card -->
+            <div id="view-success" style="display: none; width: 100%;">
+                <div style="background: #10b981; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 30px; font-weight: bold;">✓</div>
+                <h2 style="color: #10b981; margin-bottom: 5px;">Access Granted</h2>
+                <p style="color: #9ca3af; font-size: 14px; margin-bottom: 20px;">Attendance marked successfully!</p>
+                
+                <div style="background: #1f2937; padding: 15px; border-radius: 10px; text-align: left; font-size: 14px; border: 1px solid #374151;">
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <img id="student-photo" src="" alt="Student Photo" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid #3b82f6;">
+                    </div>
+                    <div style="margin-bottom: 6px;"><span style="color: #9ca3af;">Name:</span> <strong id="student-name"></strong></div>
+                    <div style="margin-bottom: 6px;"><span style="color: #9ca3af;">Roll Number:</span> <strong id="student-roll"></strong></div>
+                    <div><span style="color: #9ca3af;">Confidence:</span> <strong id="student-confidence"></strong></div>
+                </div>
+            </div>
+
+            <!-- Already Marked Outcome Card -->
+            <div id="view-already" style="display: none; width: 100%;">
+                <div style="background: #f59e0b; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 30px; font-weight: bold;">!</div>
+                <h2 style="color: #f59e0b; margin-bottom: 5px;">Already Marked</h2>
+                <p style="color: #9ca3af; font-size: 14px; margin-bottom: 20px;" id="already-message">You have already checked in today.</p>
+                
+                <div style="background: #1f2937; padding: 15px; border-radius: 10px; text-align: left; font-size: 14px; border: 1px solid #374151;">
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <img id="already-photo" src="" alt="Student Photo" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid #f59e0b;">
+                    </div>
+                    <div style="margin-bottom: 6px;"><span style="color: #9ca3af;">Name:</span> <strong id="already-name"></strong></div>
+                    <div><span style="color: #9ca3af;">Roll Number:</span> <strong id="already-roll"></strong></div>
+                </div>
+            </div>
+
+            <!-- Unknown Outcome Card -->
+            <div id="view-unknown" style="display: none; width: 100%;">
+                <div style="background: #ef4444; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 30px; font-weight: bold;">✗</div>
+                <h2 style="color: #ef4444; margin-bottom: 5px;">Access Denied</h2>
+                <p style="color: #9ca3af; font-size: 14px;">Face was not recognized in the system database.</p>
+            </div>
+
+            <!-- No Students Outcome Card -->
+            <div id="view-no-students" style="display: none; width: 100%;">
+                <div style="background: #3b82f6; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 30px; font-weight: bold;">?</div>
+                <h2 style="color: #3b82f6; margin-bottom: 5px;">No Students</h2>
+                <p style="color: #9ca3af; font-size: 14px;">Register students with photos first before scanning.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden canvas for capturing frame bytes -->
+<canvas id="capture-canvas" width="640" height="480" style="display: none;"></canvas>
+
+<!-- Font Awesome for arrow icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    @keyframes scanEffect {
+        0% { top: 0%; }
+        50% { top: 100%; }
+        100% { top: 0%; }
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<script>
+    const video = document.getElementById("webcam-video");
+    const canvas = document.getElementById("capture-canvas");
+    const btnCamera = document.getElementById("btn-camera");
+    const btnScan = document.getElementById("btn-manual-scan");
+    const chkAuto = document.getElementById("chk-auto");
+    
+    const viewSearching = document.getElementById("view-searching");
+    const viewSuccess = document.getElementById("view-success");
+    const viewAlready = document.getElementById("view-already");
+    const viewUnknown = document.getElementById("view-unknown");
+    const viewNoStudents = document.getElementById("view-no-students");
+    
+    let streamActive = false;
+    let localStream = null;
+    let scanInterval = null;
+    let isProcessing = false;
+
+    function startWebcam() {
+        navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+            .then(stream => {
+                video.srcObject = stream;
+                localStream = stream;
+                streamActive = true;
+                btnCamera.innerText = "Stop Camera";
+                btnCamera.style.background = "#ef4444";
+                
+                // Clear any existing intervals
+                if (scanInterval) clearInterval(scanInterval);
+                
+                // Set auto scan if enabled
+                if (chkAuto.checked) {
+                    setupAutoScan();
+                }
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: ", err);
+                alert("Webcam access failed. Please ensure permissions are granted.");
+            });
+    }
+
+    function stopWebcam() {
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+        video.srcObject = null;
+        streamActive = false;
+        btnCamera.innerText = "Start Camera";
+        btnCamera.style.background = "#3b82f6";
+        
+        if (scanInterval) {
+            clearInterval(scanInterval);
+            scanInterval = null;
+        }
+    }
+
+    function captureAndScan() {
+        if (!streamActive) {
+            alert("Please start the webcam first!");
+            return;
+        }
+        if (isProcessing) return;
+        
+        isProcessing = true;
+        showStatusView(viewSearching);
+        
+        const context = canvas.getContext("2d");
+        // Draw mirrored image
+        context.save();
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        context.restore();
+        
+        const base64Image = canvas.toDataURL("image/jpeg");
+        
+        fetch("/attendance/detect", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ image: base64Image })
+        })
+        .then(res => res.json())
+        .then(data => {
+            isProcessing = false;
+            
+            if (data.status === "success") {
+                document.getElementById("student-name").innerText = data.name;
+                document.getElementById("student-roll").innerText = data.roll;
+                document.getElementById("student-confidence").innerText = (data.confidence * 100).toFixed(1) + "%";
+                document.getElementById("student-photo").src = "/static/uploads/" + data.photo;
+                showStatusView(viewSuccess);
+                
+                // Go back to scanning after 4 seconds
+                resetScanAfterDelay();
+            } 
+            else if (data.status === "already_marked") {
+                document.getElementById("already-name").innerText = data.name;
+                document.getElementById("already-roll").innerText = data.roll;
+                document.getElementById("already-photo").src = "/static/uploads/" + data.photo;
+                showStatusView(viewAlready);
+                resetScanAfterDelay();
+            } 
+            else if (data.status === "unknown") {
+                showStatusView(viewUnknown);
+                resetScanAfterDelay();
+            } 
+            else if (data.status === "no_students") {
+                showStatusView(viewNoStudents);
+            }
+            else {
+                // Keep showing searching/scanning
+                showStatusView(viewSearching);
+            }
+        })
+        .catch(err => {
+            isProcessing = false;
+            console.error("Scan error: ", err);
+            showStatusView(viewSearching);
+        });
+    }
+
+    function showStatusView(view) {
+        [viewSearching, viewSuccess, viewAlready, viewUnknown, viewNoStudents].forEach(v => {
+            v.style.display = "none";
+        });
+        view.style.display = "block";
+    }
+
+    function resetScanAfterDelay() {
+        // Only trigger return to scan state if auto scan is active
+        if (chkAuto.checked) {
+            setTimeout(() => {
+                if (streamActive && !isProcessing) {
+                    showStatusView(viewSearching);
+                }
+            }, 3000);
+        }
+    }
+
+    function setupAutoScan() {
+        if (scanInterval) clearInterval(scanInterval);
+        scanInterval = setInterval(() => {
+            if (streamActive && !isProcessing) {
+                captureAndScan();
+            }
+        }, 3000);
+    }
+
+    btnCamera.addEventListener("click", () => {
+        if (streamActive) {
+            stopWebcam();
+        } else {
+            startWebcam();
+        }
+    });
+
+    btnScan.addEventListener("click", captureAndScan);
+
+    chkAuto.addEventListener("change", function() {
+        if (this.checked) {
+            if (streamActive) setupAutoScan();
+        } else {
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
+        }
+    });
+
+    // Start on load
+    startWebcam();
+</script>
+{% endblock %}

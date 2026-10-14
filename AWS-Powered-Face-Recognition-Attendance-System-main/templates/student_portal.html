@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Student Portal | Recogny AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; color: white; padding: 20px; font-family: sans-serif;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px;">
+        <h1 style="margin: 0; font-size: 32px; color: #10b981;">Student Attendance Portal</h1>
+        <a href="/logout" style="background: #374151; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; transition: .2s;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 35px;">
+        
+        <!-- Profile Details Card -->
+        <div style="background: #111827; padding: 30px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3); text-align: center; border: 1px solid #1f2937;">
+            <div style="margin-bottom: 20px;">
+                {% if student[3] %}
+                <img src="{{ url_for('static', filename='uploads/' + student[3]) }}" alt="Profile Photo" 
+                     style="width: 140px; height: 140px; object-fit: cover; border-radius: 50%; border: 3px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);">
+                {% else %}
+                <div style="width: 140px; height: 140px; border-radius: 50%; background: #1f2937; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 3px solid #374151;">
+                    <i class="fa-solid fa-user" style="font-size: 50px; color: #9ca3af;"></i>
+                </div>
+                {% endif %}
+            </div>
+            
+            <h2 style="margin-bottom: 5px; font-size: 24px;">{{ student[1] }}</h2>
+            <p style="color: #9ca3af; font-size: 14px; margin-bottom: 20px;">Roll Number: <strong>{{ student[2] }}</strong></p>
+            
+            <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.2);">Active Student Status</span>
+        </div>
+
+        <!-- Attendance Stats Summary Card -->
+        <div style="background: #111827; padding: 30px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center; border: 1px solid #1f2937;">
+            <h3 style="margin-top: 0; margin-bottom: 25px; text-align: center; color: #e5e7eb; border-bottom: 1px solid #1f2937; padding-bottom: 10px;">Attendance Summary</h3>
+            
+            <div style="display: flex; justify-content: space-around; text-align: center;">
+                <div>
+                    <div style="color: #9ca3af; font-size: 13px; margin-bottom: 5px;">Total Present</div>
+                    <div style="font-size: 32px; font-weight: bold; color: #10b981;">{{ present_days }}</div>
+                </div>
+                <div style="border-left: 1px solid #1f2937; height: 50px;"></div>
+                <div>
+                    <div style="color: #9ca3af; font-size: 13px; margin-bottom: 5px;">Attendance Rate</div>
+                    <div style="font-size: 32px; font-weight: bold; color: #60a5fa;">{{ attendance_rate }}%</div>
+                </div>
+            </div>
+            
+            <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 25px; margin-bottom: 0; line-height: 1.4;">
+                Rate is calculated relative to the total school days where scans occurred. Keep your rate above 75% for optimal grades!
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Attendance Log Table Card -->
+    <div style="background: #111827; padding: 30px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3); border: 1px solid #1f2937;">
+        <h3 style="margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #1f2937; padding-bottom: 10px;">Your Attendance Logs</h3>
+        
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #374151; color: #9ca3af;">
+                        <th style="padding: 12px 10px;">Date</th>
+                        <th style="padding: 12px 10px;">Time Marked</th>
+                        <th style="padding: 12px 10px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if attendance %}
+                        {% for row in attendance %}
+                        <tr style="border-bottom: 1px solid #1f2937;">
+                            <td style="padding: 12px 10px; font-weight: bold; color: #e5e7eb;">{{ row.date }}</td>
+                            <td style="padding: 12px 10px; color: #9ca3af;">{{ row.time }}</td>
+                            <td style="padding: 12px 10px;">
+                                <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.2);">{{ row.status }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 40px; color: #9ca3af;">
+                                <i class="fa-solid fa-calendar-xmark" style="font-size: 30px; margin-bottom: 10px; display: block;"></i>
+                                No attendance scans registered for you yet.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Font Awesome for portal icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Reports | Recogny AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 40px auto; color: white; padding: 20px; font-family: sans-serif;">
+    
+    <div style="text-align: center; margin-bottom: 30px;">
+        <a href="/dashboard" style="color: #60a5fa; text-decoration: none; font-size: 15px; float: left; margin-top: 10px;"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        <h1 style="display: inline-block;">Attendance Reports & Exports</h1>
+        <p style="color: #9ca3af; margin-top: 5px;">Filter attendance logs, search records, and export reports to CSV or PDF</p>
+    </div>
+
+    <!-- Filters Panel -->
+    <div style="background: #111827; padding: 25px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3); margin-bottom: 30px;">
+        <form method="GET" action="/reports" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1; min-width: 180px;">
+                <label style="display: block; font-size: 13px; color: #9ca3af; margin-bottom: 8px;">Start Date</label>
+                <input type="date" name="start_date" value="{{ start_date }}" style="margin-bottom: 0; padding: 10px;">
+            </div>
+            <div style="flex: 1; min-width: 180px;">
+                <label style="display: block; font-size: 13px; color: #9ca3af; margin-bottom: 8px;">End Date</label>
+                <input type="date" name="end_date" value="{{ end_date }}" style="margin-bottom: 0; padding: 10px;">
+            </div>
+            <div style="flex: 2; min-width: 240px;">
+                <label style="display: block; font-size: 13px; color: #9ca3af; margin-bottom: 8px;">Search Student</label>
+                <input type="text" name="search_query" value="{{ search_query }}" placeholder="Search by name or roll number..." style="margin-bottom: 0; padding: 10px;">
+            </div>
+            <div style="display: flex; gap: 10px; min-width: 200px;">
+                <button type="submit" style="background: #2563eb; padding: 10px 20px;">Query</button>
+                <a href="/reports" style="background: #374151; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; text-align: center; display: block; width: 100%;">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats Summary Card -->
+    <div style="display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 220px; background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+            <div style="font-size: 14px; color: #9ca3af; margin-bottom: 5px;">Total Matches Found</div>
+            <div style="font-size: 32px; font-weight: bold; color: #60a5fa;">{{ total_records }}</div>
+        </div>
+        <div style="flex: 1; min-width: 220px; background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+            <div style="font-size: 14px; color: #9ca3af; margin-bottom: 5px;">Total Students</div>
+            <div style="font-size: 32px; font-weight: bold; color: #10b981;">{{ total_students }}</div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div style="background: #111827; padding: 25px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0;">Query Results</h3>
+            
+            {% if records %}
+            <div style="display: flex; gap: 10px;">
+                <a href="/reports/export/csv?start_date={{ start_date }}&end_date={{ end_date }}&search_query={{ search_query }}" style="background: #059669; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: bold;"><i class="fa-solid fa-file-csv"></i> Export CSV</a>
+                <a href="/reports/export/pdf?start_date={{ start_date }}&end_date={{ end_date }}&search_query={{ search_query }}" style="background: #dc2626; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: bold;"><i class="fa-solid fa-file-pdf"></i> Export PDF</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #374151; color: #9ca3af;">
+                        <th style="padding: 12px 10px;">Student Name</th>
+                        <th style="padding: 12px 10px;">Roll Number</th>
+                        <th style="padding: 12px 10px;">Date</th>
+                        <th style="padding: 12px 10px;">Time</th>
+                        <th style="padding: 12px 10px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if records %}
+                        {% for row in records %}
+                        <tr style="border-bottom: 1px solid #1f2937; hover:background-color:#1e293b;">
+                            <td style="padding: 12px 10px; font-weight: bold;">{{ row.student_name }}</td>
+                            <td style="padding: 12px 10px; color: #e5e7eb;">{{ row.roll_number }}</td>
+                            <td style="padding: 12px 10px;">{{ row.date }}</td>
+                            <td style="padding: 12px 10px; color: #9ca3af;">{{ row.time }}</td>
+                            <td style="padding: 12px 10px;">
+                                <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.3);">{{ row.status }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: #9ca3af;">
+                                <i class="fa-solid fa-clipboard-question" style="font-size: 30px; margin-bottom: 10px; display: block;"></i>
+                                No attendance records found matching the query.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

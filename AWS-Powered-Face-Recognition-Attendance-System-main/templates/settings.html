@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Settings | Recogny AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 40px auto; color: white; padding: 20px; font-family: sans-serif;">
+    
+    <div style="text-align: center; margin-bottom: 30px;">
+        <a href="/dashboard" style="color: #60a5fa; text-decoration: none; font-size: 15px; float: left; margin-top: 10px;"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        <h1 style="display: inline-block;">System Settings</h1>
+        <p style="color: #9ca3af; margin-top: 5px;">Configure face recognition rules, credentials, and database backups</p>
+    </div>
+
+    <!-- Flash notifications -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div style="background: {% if category == 'success' %}rgba(16, 185, 129, 0.15){% else %}rgba(239, 68, 68, 0.15){% endif %}; 
+                            color: {% if category == 'success' %}#10b981{% else %}#ef4444{% endif %}; 
+                            border: 1px solid {% if category == 'success' %}rgba(16, 185, 129, 0.25){% else %}rgba(239, 68, 68, 0.25){% endif %}; 
+                            padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 14px;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px;">
+        
+        <!-- General Configuration Column -->
+        <div>
+            <!-- Form 1: General Settings -->
+            <div style="background: #111827; padding: 25px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3); margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px; border-bottom: 1px solid #1f2937; padding-bottom: 10px;"><i class="fa-solid fa-gear" style="color: #3b82f6; margin-right: 8px;"></i>General Config</h3>
+                
+                <form action="/settings" method="POST">
+                    <input type="hidden" name="form_type" value="general">
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 13px; color: #9ca3af; margin-bottom: 8px;">School/Institution Name</label>
+                        <input type="text" name="school_name" value="{{ settings.school_name }}" required style="margin-bottom: 0;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 13px; color: #9ca3af; margin-bottom: 8px;">Face Comparison Threshold (0.0 - 1.0)</label>
+                        <input type="number" name="threshold" value="{{ settings.threshold }}" min="0.1" max="1.0" step="0.05" required style="margin-bottom: 0;">
+                        <span style="font-size: 11px; color: #9ca3af; margin-top: 5px; display: block;">Cosine similarity limit for matching face embeddings. Recommend: 0.6.</span>
+                    </div>
+
+                    <button type="submit" style="background: #2563eb;">Save General Settings</button>
+                </form>
+            </div>
+
+            <!-- Form 2: Admin Password Settings -->
+            <div style="background: #111827; padding: 25px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3);">
+                <h3 style="margin-bottom: 20px; border-bottom: 1px solid #1f2937; padding-bottom: 10px;"><i class="fa-solid fa-lock" style="color: #ef4444; margin-right: 8px;"></i>Change Password</h3>
+                
+                <form action="/settings" method="POST">
+                    <input type="hidden" name="form_type" value="security">
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 13px; color: #9ca3af; margin-bottom: 8px;">Current Password</label>
+                        <input type="password" name="current_password" required style="margin-bottom: 0;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 13px; color: #9ca3af; margin-bottom: 8px;">New Password</label>
+                        <input type="password" name="new_password" required style="margin-bottom: 0;">
+                    </div>
+
+                    <button type="submit" style="background: #ef4444;">Update Password</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Database Backups and Restore Column -->
+        <div style="background: #111827; padding: 25px; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
+            <h3 style="margin-bottom: 20px; border-bottom: 1px solid #1f2937; padding-bottom: 10px;"><i class="fa-solid fa-database" style="color: #10b981; margin-right: 8px;"></i>Database Backups</h3>
+            
+            <p style="font-size: 14px; color: #9ca3af; line-height: 1.5; margin-bottom: 20px;">Take snapshots of your active student database records and attendance logs to store them locally, or restore a previous data snapshot file.</p>
+
+            <!-- Backup Download Button -->
+            <div style="margin-bottom: 30px;">
+                <a href="/settings/backup" style="display: block; background: #10b981; color: white; text-decoration: none; padding: 14px; border-radius: 8px; text-align: center; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"><i class="fa-solid fa-download"></i> Download database backup (.db)</a>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #1f2937; margin-bottom: 25px;">
+
+            <!-- Restore Upload Form -->
+            <div style="background: #1f2937; padding: 20px; border-radius: 10px; border: 1px solid #374151;">
+                <h4 style="margin-bottom: 15px; color: #e5e7eb;">Restore database snapshot</h4>
+                
+                <form action="/settings/restore" method="POST" enctype="multipart/form-data">
+                    <div style="margin-bottom: 15px;">
+                        <input type="file" name="backup_file" accept=".db" required style="background: #111827; border: 1px solid #374151; padding: 8px; color: #9ca3af; font-size: 13px;">
+                    </div>
+                    <button type="submit" style="background: #374151; font-size: 14px; padding: 10px 15px;" onclick="return confirm('WARNING: Overwriting the database will replace all current students and attendance sheets. Proceed?');">Upload & Restore (.db)</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

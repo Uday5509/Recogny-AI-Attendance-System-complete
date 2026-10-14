@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Students | Recogny AI{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width: 1100px; margin: auto;">
+    
+    <div style="margin-bottom: 30px;">
+        <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">Student Directory</h1>
+        <p style="color: var(--text-muted); font-size: 14px;">Register and manage student profiles and database entries</p>
+    </div>
+
+    <!-- Flash notifications -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div style="background: {% if category == 'success' %}rgba(16, 185, 129, 0.15){% else %}rgba(239, 68, 68, 0.15){% endif %}; 
+                            color: {% if category == 'success' %}#10b981{% else %}#ef4444{% endif %}; 
+                            border: 1px solid {% if category == 'success' %}rgba(16, 185, 129, 0.25){% else %}rgba(239, 68, 68, 0.25){% endif %}; 
+                            padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 14px;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: start;">
+        
+        <!-- Registration Form Column -->
+        <div class="glass-card" style="background: var(--dark-card); border-color: var(--card-border);">
+            <h3 style="margin-bottom: 20px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                <i class="fa-solid fa-user-plus" style="color: var(--primary-color); margin-right: 8px;"></i>Register Student
+            </h3>
+            
+            <form method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Student Name</label>
+                    <input type="text" name="name" placeholder="Enter Full Name" required>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Roll Number</label>
+                    <input type="text" name="roll" placeholder="Enter Roll Number" required>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Registration Image</label>
+                    <input type="file" name="photo" accept="image/*" required style="background: #111827; border: 1px solid rgba(255,255,255,0.1); padding: 8px; color: var(--text-muted); font-size: 13px; cursor: pointer;">
+                    <span style="font-size: 11px; color: var(--text-muted); margin-top: 5px; display: block;">Upload a clear front-facing portrait photo.</span>
+                </div>
+
+                <button type="submit" style="margin-top: 10px;">
+                    <i class="fa-solid fa-plus"></i> Register & Index Face
+                </button>
+            </form>
+        </div>
+
+        <!-- Student Database Listing Column -->
+        <div style="flex: 2;">
+            <div class="glass-card" style="background: var(--dark-card); border-color: var(--card-border); min-height: 400px;">
+                <h3 style="margin-bottom: 20px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fa-solid fa-users" style="color: var(--secondary-color); margin-right: 8px;"></i>Registered Students</span>
+                    <span style="font-size: 13px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 10px; border-radius: 12px;">Total: {{ students | length }}</span>
+                </h3>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                    {% if students %}
+                        {% for student in students %}
+                        <div style="background: var(--dark-card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 230px;">
+                            
+                            <!-- Avatar photo -->
+                            <div style="margin-bottom: 15px;">
+                                {% if student[3] %}
+                                <img src="{{ url_for('static', filename='uploads/' + student[3]) }}" alt="Student Avatar" 
+                                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 2px solid var(--primary-color); box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                                {% else %}
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #1f2937; display: flex; align-items: center; justify-content: center; border: 2px solid #374151;">
+                                    <i class="fa-solid fa-user" style="font-size: 30px; color: var(--text-muted);"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <h4 style="font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 5px;">{{ student[1] }}</h4>
+                                <span style="font-size: 12px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 10px;">Roll: {{ student[2] }}</span>
+                            </div>
+
+                            <!-- Delete button -->
+                            <a href="/delete_student/{{ student[0] }}" style="text-decoration: none; width: 100%; margin-top: 15px;">
+                                <button type="button" style="background: var(--danger-color); padding: 8px 15px; font-size: 13px; width: 100%;" onclick="return confirm('Delete registration for {{ student[1] }}? This will clear their data logs.');">
+                                    <i class="fa-solid fa-trash-can"></i> Delete Profile
+                                </button>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fa-solid fa-users-slash" style="font-size: 40px; margin-bottom: 12px; display: block; color: rgba(255,255,255,0.1);"></i>
+                            No students registered in database.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
